@@ -1,4 +1,4 @@
-package learning.demo;
+package learning.demo.util;
 
 import java.util.Iterator;
 

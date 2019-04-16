@@ -1,7 +1,6 @@
-package learning.demo;
+package learning.demo.util;
 
-import java.util.Iterator;
-import java.util.Stack;
+import java.util.*;
 
 /**
  * @ClassName BinarySearchTree
@@ -28,22 +27,27 @@ public class BinarySearchTree<E extends Comparable> implements BinaryTree<E> {
 
 	@Override
 	public int depth() {
-		int maxDepth = 0;
-		int currentDepth = 0;
+		int depth = 0;
 		Node node = root;
-		Stack<Node> stack = new Stack<>();
-		while(node != null) {
-			while(node != null) {
-				maxDepth = ++currentDepth > maxDepth ? currentDepth : maxDepth;
-				stack.push(node);
-				node = node.leftChild;
-			}
-			if(node == null && !stack.empty()) {
-				node = stack.pop().rightChild;
-				--currentDepth;
+		// 使用队列存储二叉树的每一层的节点，
+		Queue<Node> queue = new LinkedList<>();
+		queue.add(node);
+		// 使用队列实现二叉树层序遍历，并结算深度
+		while(!queue.isEmpty()) {
+			depth++;
+			int length = queue.size();
+			while(length-- > 0) {
+				node = queue.poll();
+				System.out.println("node    " + node.data);
+				if(node.leftChild != null) {
+					queue.add(node.leftChild);
+				}
+				if(node.rightChild != null) {
+					queue.add(node.rightChild);
+				}
 			}
 		}
-		return 0;
+		return depth;
 	}
 
 	@Override
@@ -69,7 +73,7 @@ public class BinarySearchTree<E extends Comparable> implements BinaryTree<E> {
 	 * @param e
 	 * @return
 	 */
-	private Node contains(E e){
+	private Node contains(E e) {
 		Node node = root;
 		while(node != null) {
 			int result = ((Comparable) e).compareTo(node.data);
@@ -125,31 +129,39 @@ public class BinarySearchTree<E extends Comparable> implements BinaryTree<E> {
 		// 需要删除的节点
 		Node node = contains((E)o);
 		if(node != null) {
-			modCount++;
-			size--;
-			if(node.leftChild != null && node.rightChild != null) {
-				Node minNode = minNode(node);
-				node.data = minNode.data;
-				node = minNode;
-			}
-			Node childNode = node.leftChild != null ? node.leftChild : node.rightChild;
-			if(childNode != null) {
-				if(node == node.parent.leftChild) {
-					node.parent.leftChild = childNode;
-					childNode.parent = node.parent;
-				}else if(node == node.parent.rightChild) {
-					node.parent.rightChild = childNode;
-					childNode.parent = node.parent;
-				}
-			}else {
-				if(node == node.parent.leftChild) {
-					node.parent.leftChild = null;
-				}else {
-					node.parent.rightChild = null;
-				}
-			}
+			removeNode(node);
 		}
 		return (E)node.data;
+	}
+
+	/**
+	 * 删除树中的节点，删除后树依然是二叉搜索树
+	 * @param node
+	 */
+	private void removeNode(Node node) {
+		modCount++;
+		size--;
+		if(node.leftChild != null && node.rightChild != null) {
+			Node minNode = minNode(node);
+			node.data = minNode.data;
+			node = minNode;
+		}
+		Node childNode = node.leftChild != null ? node.leftChild : node.rightChild;
+		if(childNode != null) {
+			if(node == node.parent.leftChild) {
+				node.parent.leftChild = childNode;
+				childNode.parent = node.parent;
+			}else if(node == node.parent.rightChild) {
+				node.parent.rightChild = childNode;
+				childNode.parent = node.parent;
+			}
+		}else {
+			if(node == node.parent.leftChild) {
+				node.parent.leftChild = null;
+			}else {
+				node.parent.rightChild = null;
+			}
+		}
 	}
 
 	@Override
@@ -161,7 +173,7 @@ public class BinarySearchTree<E extends Comparable> implements BinaryTree<E> {
 
 	@Override
 	public Iterator<E> iterator() {
-		return null;
+		return new Itr();
 	}
 
 	/**
@@ -174,6 +186,72 @@ public class BinarySearchTree<E extends Comparable> implements BinaryTree<E> {
 			root = root.leftChild;
 		}
 		return root;
+	}
+
+	private class Itr implements Iterator<E> {
+
+		// 迭代时最后访问的元素
+		Node<E> lastAccess;
+		// fail-fast
+		int expectedModCount;
+		// 迭代时用栈暂时存储数据
+		Stack<Node> stack;
+
+		public Itr() {
+			expectedModCount = modCount;
+			stack = new Stack<>();
+			Node node = BinarySearchTree.this.root;
+			if(node == null) {
+				throw new NullPointerException("the binary search tree is null");
+			}
+			while(node != null) {
+				stack.push(node);
+				node = node.leftChild;
+			}
+		}
+
+		@Override
+		public boolean hasNext() {
+			return stack.size() != 0;
+		}
+
+		@Override
+		public E next() {
+			checkModCount();
+			if(lastAccess != null || stack.size() != 0) {
+				lastAccess = stack.pop();
+				Node node = null;
+				if(lastAccess.rightChild != null) {
+					node = lastAccess.rightChild;
+					stack.push(node);
+					while(node.leftChild != null) {
+						node = node.leftChild;
+						stack.push(node);
+					}
+				}
+				return lastAccess.data;
+			}
+			return null;
+		}
+
+		@Override
+		public void remove() {
+			checkModCount();
+			if(lastAccess == null) {
+				throw new NullPointerException("can not remove null");
+			}
+			BinarySearchTree.this.removeNode(lastAccess);
+			expectedModCount++;
+		}
+
+		/**
+		 * fail-fast
+		 */
+		final void checkModCount() {
+			if(expectedModCount != modCount) {
+				throw new ConcurrentModificationException();
+			}
+		}
 	}
 
 	protected class Node<E extends Comparable> {
