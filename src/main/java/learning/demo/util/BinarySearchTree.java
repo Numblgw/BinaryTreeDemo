@@ -143,7 +143,7 @@ public class BinarySearchTree<E extends Comparable> implements BinaryTree<E> {
 		modCount++;
 		size--;
 		if(node.leftChild != null && node.rightChild != null) {
-			Node minNode = minNode(node);
+			Node minNode = minNode(node.rightChild);
 			node.data = minNode.data;
 			node = minNode;
 		}
@@ -189,7 +189,7 @@ public class BinarySearchTree<E extends Comparable> implements BinaryTree<E> {
 		return root;
 	}
 
-	private class Itr implements Iterator<E> {
+	private class Itr<E extends Comparable> implements Iterator<E> {
 
 		// 迭代时最后访问的元素
 		Node<E> lastAccess;
@@ -202,9 +202,6 @@ public class BinarySearchTree<E extends Comparable> implements BinaryTree<E> {
 			expectedModCount = modCount;
 			stack = new Stack<>();
 			Node node = BinarySearchTree.this.root;
-			if(node == null) {
-				throw new NullPointerException("the binary search tree is null");
-			}
 			while(node != null) {
 				stack.push(node);
 				node = node.leftChild;
@@ -219,9 +216,9 @@ public class BinarySearchTree<E extends Comparable> implements BinaryTree<E> {
 		@Override
 		public E next() {
 			checkModCount();
-			if(lastAccess != null || stack.size() != 0) {
+			if(stack.size() != 0) {
 				lastAccess = stack.pop();
-				Node node = null;
+				Node node;
 				if(lastAccess.rightChild != null) {
 					node = lastAccess.rightChild;
 					stack.push(node);
@@ -237,12 +234,13 @@ public class BinarySearchTree<E extends Comparable> implements BinaryTree<E> {
 
 		@Override
 		public void remove() {
-			checkModCount();
+			// 调用删除方法前要先访问一个元素，否则抛出异常
 			if(lastAccess == null) {
-				throw new NullPointerException("can not remove null");
+				throw new NullPointerException("the last access element is not exist");
 			}
+			checkModCount();
 			BinarySearchTree.this.removeNode(lastAccess);
-			expectedModCount++;
+			expectedModCount = modCount;
 		}
 
 		/**

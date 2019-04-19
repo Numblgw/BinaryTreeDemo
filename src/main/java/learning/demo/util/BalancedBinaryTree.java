@@ -1,8 +1,6 @@
 package learning.demo.util;
 
-import java.util.Iterator;
-import java.util.LinkedList;
-import java.util.Queue;
+import java.util.*;
 
 /**
  * @ClassName BalancedBinaryTree
@@ -30,6 +28,60 @@ public class BalancedBinaryTree<E extends Comparable> implements BinaryTree<E> {
 	@Override
 	public int depth() {
 		return depth(this.root);
+	}
+
+
+	@Override
+	public int size() {
+		return this.size;
+	}
+
+	@Override
+	public boolean isEmpty() {
+		return size == 0;
+	}
+
+	@Override
+	public boolean contains(Object o) {
+		if(!(o instanceof Comparable)) {
+			throw new RuntimeException("this object can not compare, place implement java.lang.Comparable");
+		}
+		return contains((E)o) != null;
+	}
+
+	@Override
+	public boolean add(E e) {
+		if(e == null) {
+			throw new NullPointerException("can not add 'null' to the binary search tree");
+		}
+		modCount++;
+		// 计算插入位置并插入节点
+		Node node = addNode(e);
+		// 检查并维护平衡
+		checkAndAdjustBalance(node);
+		return true;
+	}
+
+	@Override
+	public E remove(Object o) {
+		Node node = contains((E) o);
+		if(node != null) {
+			removeNode(node);
+			return (E)node.data;
+		}
+		return null;
+	}
+
+	@Override
+	public void clear() {
+		this.root = null;
+		modCount++;
+		size = 0;
+	}
+
+	@Override
+	public Iterator<E> iterator() {
+		return null;
 	}
 
 	/**
@@ -62,24 +114,6 @@ public class BalancedBinaryTree<E extends Comparable> implements BinaryTree<E> {
 		return depth;
 	}
 
-	@Override
-	public int size() {
-		return this.size;
-	}
-
-	@Override
-	public boolean isEmpty() {
-		return size == 0;
-	}
-
-	@Override
-	public boolean contains(Object o) {
-		if(!(o instanceof Comparable)) {
-			throw new RuntimeException("the object can not compare, place implement java.lang.Comparable");
-		}
-		return contains((E)o) != null;
-	}
-
 	/**
 	 * 查找元素 e，如果存在返回就该节点（node），不存在返回null
 	 * @param e
@@ -98,19 +132,6 @@ public class BalancedBinaryTree<E extends Comparable> implements BinaryTree<E> {
 			}
 		}
 		return null;
-	}
-
-	@Override
-	public boolean add(E e) {
-		if(e == null) {
-			throw new NullPointerException("can not add 'null' to the binary search tree");
-		}
-		modCount++;
-		// 计算插入位置并插入节点
-		Node node = addNode(e);
-		// 检查并维护平衡
-		checkAndAdjustBalance(node);
-		return true;
 	}
 
 	/**
@@ -146,7 +167,7 @@ public class BalancedBinaryTree<E extends Comparable> implements BinaryTree<E> {
 					node = node.right;
 					break;
 				}
-			// 插入节点已存在时不做插入操作，但是 modCount 会自增
+				// 插入节点已存在时不做插入操作，但是 modCount 会自增
 			}else {
 				break;
 			}
@@ -155,9 +176,8 @@ public class BalancedBinaryTree<E extends Comparable> implements BinaryTree<E> {
 	}
 
 	/**
-	 * 从node节点开始向上查找失去平衡的节点，得到最小不平衡子树的树根，如果平衡则返回 null
+	 * 从node节点开始 向上查找失去平衡的节点，得到最小不平衡子树的树根，并调整平衡
 	 * @param node	开始查找的节点
-	 * @return	该树平衡 return null 否则 return 最小不平衡子树的树根节点
 	 */
 	private void checkAndAdjustBalance(Node node) {
 		// 平衡因子
@@ -255,24 +275,46 @@ public class BalancedBinaryTree<E extends Comparable> implements BinaryTree<E> {
 		this.root = node;
 	}
 
-	@Override
-	public E remove(Object o) {
-		return null;
-	}
-
-	@Override
-	public void clear() {
-		this.root = null;
+	/**
+	 * 删除node节点，要分别处理 node节点有 0,1,2 个子节点的情况
+	 * @param node
+	 */
+	private void removeNode(Node node) {
 		modCount++;
-		size = 0;
+		size--;
+		// 当被删除节点存在两个子节点时，那被删除节点和右子树中最小节点互换，或者和左子树中最大节点互换
+		if(node.left != null && node.right != null) {
+			Node minNode = minNode(node.right);
+			node.data = minNode.data;
+			node = minNode;
+		}
+		Node childNode = node.left != null ? node.left : node.right;
+		// 当被删除节点存在一个子节点时
+		if(childNode != null) {
+			node.data = childNode.data;
+			node = childNode;
+		}
+		if(node == node.parent.left) {
+			node.parent.left = null;
+		}else {
+			node.parent.right = null;
+		}
+		checkAndAdjustBalance(node.parent);
 	}
 
-	@Override
-	public Iterator<E> iterator() {
-		return null;
+	/**
+	 * 从 node 向下查找最小节点，即找到 以 node 为 根 的树中的最小节点
+	 * @param node	查找的起始节点（子树的根）
+	 * @return	node以及node子节点中的最小节点，
+	 */
+	private Node minNode(Node node) {
+		while(node != null && node.left != null) {
+			node = node.left;
+		}
+		return node;
 	}
 
-	private class Node<E extends Comparable<E>> {
+	private class Node<E> {
 
 		Node parent;
 
@@ -289,6 +331,70 @@ public class BalancedBinaryTree<E extends Comparable> implements BinaryTree<E> {
 		Node(Node parent, E data) {
 			this.parent = parent;
 			this.data = data;
+		}
+	}
+
+	private class Itr<E extends Comparable> implements Iterator<E>{
+
+		// 迭代时最后访问的元素
+		Node<E> lastAccess;
+		// fail-fast
+		int expectedModCount;
+		// 迭代时用栈暂时存储数据
+		Stack<Node> stack;
+
+		public Itr() {
+			expectedModCount = BalancedBinaryTree.this.modCount;
+			stack = new Stack<>();
+			Node node = BalancedBinaryTree.this.root;
+			while(node != null) {
+				stack.push(node);
+				node = node.left;
+			}
+		}
+
+		@Override
+		public boolean hasNext() {
+			return stack.size() != 0;
+		}
+
+		@Override
+		public E next() {
+			checkModCount();
+			if(stack.size() != 0) {
+				lastAccess = stack.pop();
+				Node node;
+				if(lastAccess.right != null) {
+					node = lastAccess.right;
+					stack.push(node);
+					while(node.left != null) {
+						node = node.left;
+						stack.push(node);
+					}
+				}
+				return lastAccess.data;
+			}
+			return null;
+		}
+
+		@Override
+		public void remove() {
+			// 调用删除方法前要先访问一个元素，否则抛出异常
+			if(lastAccess == null) {
+				throw new NullPointerException("the last access element is not exist");
+			}
+			checkModCount();
+			BalancedBinaryTree.this.removeNode(lastAccess);
+			expectedModCount = modCount;
+		}
+
+		/**
+		 * fail-fast
+		 */
+		final void checkModCount() {
+			if(expectedModCount != modCount) {
+				throw new ConcurrentModificationException();
+			}
 		}
 	}
 }
