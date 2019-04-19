@@ -31,14 +31,15 @@ public class BinarySearchTree<E extends Comparable> implements BinaryTree<E> {
 		Node node = root;
 		// 使用队列存储二叉树的每一层的节点，
 		Queue<Node> queue = new LinkedList<>();
-		queue.add(node);
+		if(node != null) {
+			queue.add(node);
+		}
 		// 使用队列实现二叉树层序遍历，并结算深度
 		while(!queue.isEmpty()) {
 			depth++;
 			int length = queue.size();
 			while(length-- > 0) {
 				node = queue.poll();
-				System.out.println("node    " + node.data);
 				if(node.leftChild != null) {
 					queue.add(node.leftChild);
 				}
@@ -63,7 +64,7 @@ public class BinarySearchTree<E extends Comparable> implements BinaryTree<E> {
 	@Override
 	public boolean contains(Object o) {
 		if(!(o instanceof Comparable)) {
-			throw new RuntimeException("the object can not compare, place implements java.lang.Comparable");
+			throw new RuntimeException("the object can not compare, place implement java.lang.Comparable");
 		}
 		return contains((E)o) != null;
 	}
@@ -76,7 +77,7 @@ public class BinarySearchTree<E extends Comparable> implements BinaryTree<E> {
 	private Node contains(E e) {
 		Node node = root;
 		while(node != null) {
-			int result = ((Comparable) e).compareTo(node.data);
+			int result = e.compareTo(node.data);
 			if(result < 0) {
 				node = node.leftChild;
 			}else if(result > 0) {
@@ -254,7 +255,7 @@ public class BinarySearchTree<E extends Comparable> implements BinaryTree<E> {
 		}
 	}
 
-	protected class Node<E extends Comparable> {
+	private class Node<E extends Comparable> {
 
 		/**
 		 * 父节点
