@@ -11,6 +11,39 @@ import java.util.*;
 public class BalancedBinaryTree<E extends Comparable> implements BinaryTree<E> {
 
 	/**
+	 * 左旋
+	 *
+	 * 		第一种情况
+	 *
+	 * 	 1
+	 * 	  \                     2
+	 * 	   2        --->      /  \
+	 * 	   	\                1    3
+	 * 	   	 3
+	 *
+	 * 		第二种情况
+	 *
+	 *     2
+	 *    / \                    4
+	 *   1   4                 /  \
+	 *      / \     --->      2    5
+	 *     3   5            /  \    \
+	 *          \          1   3     6
+	 *           6
+	 *
+	 * 先右旋再左旋
+	 *
+	 *   1             1
+	 *    \             \                 2
+	 *     3   --->      2     --->      / \
+	 *    /               \             1   3
+	 *   2                 3
+	 *
+	 *
+	 *
+	 */
+
+	/**
 	 * 修改次数，用以实现 fail-fast机制
 	 */
 	private int modCount;
@@ -81,7 +114,7 @@ public class BalancedBinaryTree<E extends Comparable> implements BinaryTree<E> {
 
 	@Override
 	public Iterator<E> iterator() {
-		return null;
+		return new Itr<>();
 	}
 
 	/**
@@ -91,23 +124,22 @@ public class BalancedBinaryTree<E extends Comparable> implements BinaryTree<E> {
 	 */
 	private int depth(Node root) {
 		int depth = 0;
-		Node node = root;
 		// 使用队列存储二叉树的每一层的节点，
 		Queue<Node> queue = new LinkedList<>();
-		if(node != null) {
-			queue.add(node);
+		if(root != null) {
+			queue.add(root);
 		}
 		// 使用队列实现二叉树层序遍历，并结算深度
 		while(!queue.isEmpty()) {
 			depth++;
 			int length = queue.size();
 			while(length-- > 0) {
-				node = queue.poll();
-				if(node.left != null) {
-					queue.add(node.right);
+				root = queue.poll();
+				if(root.left != null) {
+					queue.add(root.left);
 				}
-				if(node.right != null) {
-					queue.add(node.right);
+				if(root.right != null) {
+					queue.add(root.right);
 				}
 			}
 		}
@@ -204,7 +236,7 @@ public class BalancedBinaryTree<E extends Comparable> implements BinaryTree<E> {
 					rightRotate(node.right);
 				}
 				// 左旋
-				rightRotate(node);
+				leftRotate(node);
 			}
 			// 检查root 是否指向根节点
 			checkRoot();
@@ -227,6 +259,7 @@ public class BalancedBinaryTree<E extends Comparable> implements BinaryTree<E> {
 	 * @param n
 	 */
 	private void leftRotate(Node n) {
+		// 先把
 		n.right.parent = n.parent;
 		if(n.parent != null) {
 			if(n.parent.left == n) {
@@ -234,6 +267,8 @@ public class BalancedBinaryTree<E extends Comparable> implements BinaryTree<E> {
 			}else {
 				n.parent.right = n.right;
 			}
+		}else {
+			this.root = n.right;
 		}
 		n.parent = n.right;
 		n.right = n.parent.left;

@@ -16,8 +16,7 @@ import java.util.Iterator;
 public class App {
     public static void main( String[] args ) {
         System.out.println( "Hello World!" );
-        BinaryTree<Integer> binaryTree = new BinarySearchTree<>();
-		System.out.println(binaryTree.depth());
+        BinaryTree<Integer> binaryTree = new BalancedBinaryTree<>();
 		binaryTree.add(0);
 		binaryTree.add(1);
 		binaryTree.add(6);
@@ -27,9 +26,8 @@ public class App {
 		binaryTree.add(5);
 		binaryTree.add(2);
 		Iterator iterator = binaryTree.iterator();
-		Integer i = null;
-		while((i = (Integer) iterator.next()) != null) {
-			System.out.println(i);
+		while(iterator.hasNext()) {
+			System.out.println(iterator.next());
 		}
     }
 }
