@@ -238,8 +238,6 @@ public class BalancedBinaryTree<E extends Comparable> implements BinaryTree<E> {
 				// 左旋
 				leftRotate(node);
 			}
-			// 检查root 是否指向根节点
-			checkRoot();
 		}
 	}
 
@@ -290,6 +288,8 @@ public class BalancedBinaryTree<E extends Comparable> implements BinaryTree<E> {
 			}else {
 				n.parent.right = n.left;
 			}
+		}else {
+			this.root = n.left;
 		}
 		n.parent = n.left;
 		n.left = n.parent.right;
@@ -297,17 +297,6 @@ public class BalancedBinaryTree<E extends Comparable> implements BinaryTree<E> {
 			n.left.parent = n;
 		}
 		n.parent.right = n;
-	}
-
-	/**
-	 * 当进行完旋转之后 root 可能并不是指向 树根，需要调用该方法检查并修正
-	 */
-	private void checkRoot() {
-		Node node = this.root;
-		while(node.parent != null) {
-			node = node.parent;
-		}
-		this.root = node;
 	}
 
 	/**
