@@ -150,7 +150,7 @@ public class BalancedBinaryTree<E extends Comparable> implements BinaryTree<E> {
 	/**
 	 * 查找元素 e，如果存在返回就该节点（node），不存在返回null
 	 * @param e
-	 * @return
+	 * @return 数据e所在的节点，或者 null
 	 */
 	private Node contains(E e) {
 		Node node = root;
