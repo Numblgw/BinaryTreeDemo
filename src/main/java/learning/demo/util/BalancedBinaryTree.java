@@ -1,5 +1,6 @@
 package learning.demo.util;
 
+import java.io.PrintWriter;
 import java.util.*;
 
 /**
@@ -209,11 +210,12 @@ public class BalancedBinaryTree<E extends Comparable> implements BinaryTree<E> {
 
 	/**
 	 * 从node节点开始 向上查找失去平衡的节点，得到最小不平衡子树的树根，并调整平衡
-	 * @param node	开始查找的节点
+	 * @param node	开始查找的节点（新插入的节点）
 	 */
 	private void checkAndAdjustBalance(Node node) {
 		// 平衡因子
 		int balanceFactor = 0;
+		// 找到最小不平衡子树
 		while(node.parent != null) {
 			node = node.parent;
 			balanceFactor = calculateBalanceFactor(node);
@@ -221,6 +223,7 @@ public class BalancedBinaryTree<E extends Comparable> implements BinaryTree<E> {
 				break;
 			}
 		}
+		// 调整平衡
 		if(balanceFactor == 2 || balanceFactor == -2) {
 			// 左旋或者右旋维持平衡
 			if(balanceFactor == 2) {
@@ -254,11 +257,12 @@ public class BalancedBinaryTree<E extends Comparable> implements BinaryTree<E> {
 
 	/**
 	 * 左旋
-	 * @param n
+	 * @param n 最小不平衡子树的树根
 	 */
 	private void leftRotate(Node n) {
-		// 先把
+		// 先把右子的parent指针弄好。
 		n.right.parent = n.parent;
+		// 判断原父是否为root，不是的话把原父的父节点，和新父连接。
 		if(n.parent != null) {
 			if(n.parent.left == n) {
 				n.parent.left = n.right;
@@ -268,11 +272,14 @@ public class BalancedBinaryTree<E extends Comparable> implements BinaryTree<E> {
 		}else {
 			this.root = n.right;
 		}
+		// 将原父的父节点指针指向新父
 		n.parent = n.right;
+		// 将新父的原左子，变成原父的右子
 		n.right = n.parent.left;
 		if(n.right != null) {
 			n.right.parent = n;
 		}
+		// 新父的左子节点指针指向原父
 		n.parent.left = n;
 	}
 
@@ -281,7 +288,9 @@ public class BalancedBinaryTree<E extends Comparable> implements BinaryTree<E> {
 	 * @param n
 	 */
 	private void rightRotate(Node n) {
+		// 先把左子的parent指针弄好
 		n.left.parent = n.parent;
+		// 判断原父是否为root，不是的话把原父的父节点，和新父连接。
 		if(n.parent != null) {
 			if(n.parent.left == n) {
 				n.parent.left = n.left;
@@ -291,11 +300,14 @@ public class BalancedBinaryTree<E extends Comparable> implements BinaryTree<E> {
 		}else {
 			this.root = n.left;
 		}
+		// 将原父的父节点指针指向新父
 		n.parent = n.left;
+		// 将新父的原右子，变成原父的左子
 		n.left = n.parent.right;
 		if(n.left != null) {
 			n.left.parent = n;
 		}
+		// 新父的左子节点指针指向原父
 		n.parent.right = n;
 	}
 
@@ -323,7 +335,7 @@ public class BalancedBinaryTree<E extends Comparable> implements BinaryTree<E> {
 		}else {
 			node.parent.right = null;
 		}
-		checkAndAdjustBalance(node.parent);
+		checkAndAdjustBalance(node);
 	}
 
 	/**
